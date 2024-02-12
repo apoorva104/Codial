@@ -7,11 +7,14 @@ const db = require('./config/mongoose');
 const session = require('express-session');
 const passport = require('passport');
 //const passportLocal = require('./config/passport-local-strategy');
-const passportLocal= require('./config/passport-local-strategy');
+const passportLocal = require('./config/passport-local-strategy');
+const passportJWT = require('./config/passport-jwt-strategy');
+const passportGoogle = require('./config/passport-google-oauth2-strategy');
 const MongoStore = require('connect-mongo');
 const connect = require('connect')
-
-const sassMiddleware =require('node-sass-middleware');
+const sassMiddleware = require('node-sass-middleware');
+const flash = require('connect-flash');
+const customWare = require('./config/middleware');
 
 app.use(sassMiddleware({
     src: './assets/scss',
@@ -23,15 +26,16 @@ app.use(sassMiddleware({
 
 app.use(express.urlencoded());
 app.use(cookieParser());
+
 app.use(expressLayouts);
 app.use(express.static('./assets'));
+app.use('/uploads', express.static(__dirname + '/uploads'));
 app.set('layout extractStyles', true);
 app.set('layout extractScripts', true);
 app.set('view engine', 'ejs');
 app.set('views', './views');
 app.use(session({
     name: 'codeial',
-    // TODO change the secret before deployment in production mode
     secret: 'Apoorva',
     saveUninitialized: false,
     resave: false,
@@ -39,12 +43,12 @@ app.use(session({
         maxAge: (1000 * 60 * 100)
     },
     store: MongoStore.create({
-        mongoUrl:"mongodb://localhost/codial_development",
-        autoRemove:'disabled'
+        mongoUrl: "mongodb+srv://srivastavaapoorva104:apoorva123@cluster0.7cn33kj.mongodb.net/?retryWrites=true&w=majority",
+        autoRemove: 'disabled'
 
     })
     ,
-    function (err) {
+    function(err) {
         console.log(err || 'connect-mongodb setup ok');
     }
 }));
@@ -52,7 +56,8 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(passport.setAuthenticatedUser);
-
+app.use(flash());
+app.use(customWare.setFlash)
 
 // use express router
 app.use('/', require('./routes'));
